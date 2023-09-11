@@ -25,6 +25,46 @@ cap = cv2.VideoCapture(0)   # Getting video feed from the webcam
 cap.set(3, width)           # Adjusting size
 cap.set(4, height)
 
+# Function to detection hand-zoom movement
+is_hands_close = False  # Variable to track if hands are close
+close_timeout = None  # Variable to store the timeout
+
+
+def check_hand_distance(firstHand, secondHand):
+    thumb_distance = abs(firstHand[4]['x']-secondHand[4]['x'])
+
+
+# Function to be executed when hands are close
+def on_hands_close():
+    print("Hands are close")
+    # Here, you can execute the appropriate code
+
+# Function to set a timeout if hands don't change
+def set_close_timeout():
+    global close_timeout
+    close_timeout = time.time() + 1  # Timeout after 1 second (adjust as needed)
+
+# Function to cancel the timeout if hands change before the timeout
+def cancel_close_timeout():
+    global close_timeout
+    close_timeout = None
+
+# Simulating the condition where hands are close
+def simulate_hands_close():
+    global is_hands_close
+    if not is_hands_close:
+        is_hands_close = True
+        set_close_timeout()
+        on_hands_close()
+
+# Simulating the condition where hands are apart
+def simulate_hands_apart():
+    global is_hands_close
+    if is_hands_close:
+        cancel_close_timeout()
+        is_hands_close = False
+
+
 while True:
     success, img = cap.read()
     img = detector.findHands(img)                       # Finding the hand
@@ -50,16 +90,6 @@ while True:
             cv2.circle(img, (x1, y1), 7, (0, 0, 0), cv2.FILLED)
             prev_x, prev_y = curr_x, curr_y
 
-        if fingers[1] == 1 and fingers[2] == 1:
-            length, img, lineInfo = detector.findDistance(4, 8, img)
-            if length < 20:
-                print("ooo")
-                # Ketika length kurang dari 20
-                if length > 10:
-                    print("rrr")
-                    # Jika length kemudian lebih dari 40
-                    # If both fingers are really close to each other
-                    pyautogui.hotkey('ctrl', '+')
 
     cTime = time.time()
     fps = 1/(cTime-pTime)
