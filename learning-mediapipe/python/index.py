@@ -63,8 +63,82 @@ def check_hand_distance(first_hand, second_hand):
     return thumb_distance < 0.15
 
 
+# variable usage
 zoom_out_interval = None
 zoom_in_interval = None
+continue_zooming = None
+
+# zooming
+
+
+class Hand_position_verification:
+    middle_finger = [0, 0, 0]
+    bottom_hand = [0, 0, 0]
+
+
+first_hand_position = Hand_position_verification()
+second_hand_position = Hand_position_verification()
+
+
+def stay_in_position(first, second):
+    firstMiddleResultX = abs(
+        first[12].x-first_hand_position.middle_finger[0])
+    firstMiddleResultY = abs(
+        first[12].y-first_hand_position.middle_finger[1])
+    firstMiddleResultZ = abs(
+        first[12].z-first_hand_position.middle_finger[2])
+
+    firstThumbResultX = abs(
+        first[0].x-first_hand_position.bottom_hand[0])
+    firstThumbResultY = abs(
+        first[0].y-first_hand_position.bottom_hand[1])
+    firstThumbResultZ = abs(
+        first[0].z-first_hand_position.bottom_hand[2])
+
+    secondMiddleResultX = abs(
+        second[12].x-second_hand_position.middle_finger[0])
+    secondMiddleResultY = abs(
+        second[12].y-second_hand_position.middle_finger[1])
+    secondMiddleResultZ = abs(
+        second[12].z-second_hand_position.middle_finger[2])
+
+    secondThumbResultX = abs(
+        second[0].x-second_hand_position.bottom_hand[0])
+    secondThumbResultY = abs(
+        second[0].y-second_hand_position.bottom_hand[1])
+    secondThumbResultZ = abs(
+        second[0].z-second_hand_position.bottom_hand[2])
+
+    # print("before : ", first[12].x)
+    # print("after : ", first_hand_position.middle_finger[0])
+
+    # print("firstMiddleResultX : ", firstMiddleResultX)
+    # print("firstMiddleResultY : ", firstMiddleResultY)
+    # print("firstMiddleResultZ : ", firstMiddleResultZ)
+
+    # print("firstThumbResultX : ", firstThumbResultX)
+    # print("firstThumbResultY : ", firstThumbResultY)
+    # print("firstThumbResultZ : ", firstThumbResultZ)
+
+    # print("secondMiddleResultX : ", secondMiddleResultX)
+    # print("secondMiddleResultY : ", secondMiddleResultY)
+    # print("secondMiddleResultZ : ", secondMiddleResultZ)
+
+    # print("secondThumbResultX : ", secondThumbResultX)
+    # print("secondThumbResultY : ", secondThumbResultY)
+    # print("secondThumbResultZ : ", secondThumbResultZ)
+
+    # if firstMiddleResultX > 0.3 or firstMiddleResultY > 0.3 or firstMiddleResultZ > 0.3 or firstThumbResultX > 0.3 or firstThumbResultY > 0.3 or firstThumbResultZ > 0.3 or secondMiddleResultX > 0.3 or secondMiddleResultY > 0.3 or secondMiddleResultZ > 0.3 or secondThumbResultX > 10 or secondThumbResultY > 10 or secondThumbResultZ > 10:
+
+    # print("firstMiddleResultX : ", firstMiddleResultX)
+    # print("firstMiddleResultY : ", firstMiddleResultY)
+
+    if firstMiddleResultX > 0.4 or firstMiddleResultY > 0.4:
+        # print("1111")
+        return False
+
+    # print("2222")
+    return True
 
 # --------------------------------------------------------------------------------------
 
@@ -107,7 +181,6 @@ with mp_hands.Hands(max_num_hands=2, model_complexity=0, min_detection_confidenc
         if results.multi_hand_landmarks:
             # only detect 2 hands
             if len(results.multi_hand_landmarks) == 2:
-
                 # first hand
                 first_hand = results.multi_hand_landmarks[0].landmark
                 # get all of coordinate in first hand
@@ -137,22 +210,47 @@ with mp_hands.Hands(max_num_hands=2, model_complexity=0, min_detection_confidenc
 
                 hands_close = check_hand_distance(first_hand, second_hand)
 
+                # Zooming functional
                 if hand_inside_side_area(first_hand, second_hand) and hand_inside_bottom_area(first_hand, second_hand):
                     if hands_close:
                         zoom_in_interval = time.time()+1
+
                     elif zoom_in_interval != None and time.time() < zoom_in_interval:
                         if not hands_close:
-                            pyautogui.scroll(20)
+                            first_hand_position.middle_finger[0] = first_hand[12].x
+                            first_hand_position.middle_finger[1] = first_hand[12].y
+                            first_hand_position.middle_finger[2] = first_hand[12].z
+
+                            first_hand_position.bottom_hand[0] = first_hand[0].x
+                            first_hand_position.bottom_hand[1] = first_hand[0].y
+                            first_hand_position.bottom_hand[2] = first_hand[0].z
+
+                            second_hand_position.middle_finger[0] = second_hand[12].x
+                            second_hand_position.middle_finger[1] = second_hand[12].y
+                            second_hand_position.middle_finger[2] = second_hand[12].z
+
+                            second_hand_position.bottom_hand[0] = second_hand[0].x
+                            second_hand_position.bottom_hand[1] = second_hand[0].y
+                            second_hand_position.bottom_hand[2] = second_hand[0].z
+
+                            print("xxxx")
+                            continue_zooming = time.time()+1.5
+                            zoom_in_interval = None
+                            # pyautogui.scroll(20)
+
+                    elif stay_in_position(first_hand, second_hand) == True and time.time() < continue_zooming:
+                        print("rrr")
+                        continue_zooming = time.time()+1.5
+
+                    elif stay_in_position(first_hand, second_hand) == False:
                         zoom_in_interval = None
 
-                    if not hands_close:
-                        zoom_out_interval = time.time()+1
-                    elif zoom_out_interval != None and time.time() < zoom_out_interval:
-                        if hands_close:
-                            pyautogui.scroll(-20)
-                        zoom_out_interval = None
-
-                
+                    # if not hands_close:
+                    #     zoom_out_interval = time.time()+1
+                    # elif zoom_out_interval != None and time.time() < zoom_out_interval:
+                    #     if hands_close:
+                    #         pyautogui.scroll(-20)
+                    #     zoom_out_interval = None
 
             # if len(results.multi_hand_landmarks) == 1:
             #     # first hand
